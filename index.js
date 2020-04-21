@@ -48,13 +48,49 @@ export const clearStorage = name => {
     window.localStorage.removeItem(name)
 }
 
+/**
+ * 获取指定cookie
+ * @param {string} name key
+ */
+export const getCookie = (name) => {
+    var arr,reg=new RegExp("(^| )*"+name+"=([^;]*)(;|$)");
+    if(arr=document.cookie.match(reg)){
+        return unescape(arr[2]);
+    }else{
+        return null
+    }
+}
+
+/**
+ * 设置cookie
+ * @param {string} name key
+ * @param {*} value cookie值
+ * @param {number} Hours 有效时间
+ */
+export const setCookie = (name, value, Hours) => {
+    var d = new Date();
+    var offset = 8;
+    var utc = d.getTime() + d.getTimezoneOffset() * 60000;
+    var nd = utc + 3600000 * offset;
+    var exp = new Date(nd);
+    exp.setTime(exp.getTime() + Hours * 60 * 60 * 1000);
+    document.cookie =
+      name +
+      "=" +
+      escape(value) +
+      ";path=/;expires=" +
+      exp.toGMTString() +
+      ";domain=360doc.com;";
+}
+  
+
 
 /**
  * 获取url参数
  * @param {string} name 参数名
  * @param {*} origin url地址
  */
-export const getUrlParams = (name, origin = null) => {
+export const getUrlParam = (name, origin = null) => {
     let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
     let r = null;
     if (origin == null) {
@@ -65,9 +101,24 @@ export const getUrlParams = (name, origin = null) => {
     if (r != null) return decodeURIComponent(r[2]);
 }
 
+/**
+ * 将json对象拼接成url参数
+ * @param {Object} obj JSON对象
+ */
+export const fnParams2Url = obj=> {
+    let aUrl = []
+    let fnAdd = function(key, value) {
+      return key + '=' + value
+    }
+    for (var k in obj) {
+      aUrl.push(fnAdd(k, obj[k]))
+    }
+    return encodeURIComponent(aUrl.join('&'))
+}
+
 
 /**
- * 返回顶部
+ * 平滑滚动到顶部
  */
 export const scrollToTop = () => {
     const c = document.documentElement.scrollTop || document.body.scrollTop;
@@ -76,6 +127,37 @@ export const scrollToTop = () => {
         window.scrollTo(0, c - c / 8);
     }
 };
+
+
+/**
+ * 滚动到指定元素区域 
+ * smoothScroll('#fooBar')
+ * @param {element} element 元素id
+ */
+export const smoothScroll = element => {
+    document.querySelector(element).scrollIntoView({
+        behavior: 'smooth'
+    });
+}
+
+/**
+ * 获取页面的scrollTop
+ */
+export const getPageScrollTop = () => {
+    var a = document;
+    return a.documentElement.scrollTop || a.body.scrollTop;
+}
+
+/**
+ * 获取可视区域高度
+ */
+export const getPageViewHeight = () => {
+    var d = document,
+        a = d.compatMode == "BackCompat" ? d.body : d.documentElement;
+    return a.clientHeight;
+}
+
+
 
 /**
  * 文件转base64
@@ -282,3 +364,39 @@ export function trim(str, type = 1) {
 export const detectDeviceType = () => { 
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop'; 
 };
+
+/**
+ * 延迟执行
+ * sleep(1000).then(() => {})
+ * @param {ms} time 延迟时间
+ */
+export const sleep = time => {
+    return new Promise(resolve => setTimeout(resolve, time));
+};
+
+/**
+ * 日期时间格式化
+ * dateFormat("YYYY-mm-dd HH:MM", date)
+ * @param {string} fmt 格式字符串
+ * @param {string} d 日期时间
+ */
+export const dateFormat = (fmt, d) => {
+    let ret,
+        date = new Date(d.replace('-','/'));
+    const opt = {
+        "Y+": date.getFullYear().toString(),        // 年
+        "m+": (date.getMonth() + 1).toString(),     // 月
+        "d+": date.getDate().toString(),            // 日
+        "H+": date.getHours().toString(),           // 时
+        "M+": date.getMinutes().toString(),         // 分
+        "S+": date.getSeconds().toString()          // 秒
+        // 有其他格式化字符需求可以继续添加，必须转化成字符串
+    };
+    for (let k in opt) {
+        ret = new RegExp("(" + k + ")").exec(fmt);
+        if (ret) {
+            fmt = fmt.replace(ret[1], (ret[1].length == 1) ? (opt[k]) : (opt[k].padStart(ret[1].length, "0")))
+        };
+    };
+    return fmt;
+}
